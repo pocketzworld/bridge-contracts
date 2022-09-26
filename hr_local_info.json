@@ -1,0 +1,20 @@
+[
+  {
+    "ConstAddressDeployer": "0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a",
+    "AxelarGateway": "0xE17654e76F467B00cD66BD37f178c939B1c9a510",
+    "AxelarGatewayProxy": "0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063",
+    "AxelarGasService": "0x2529bf1c546D3B7dB269B74F124e24b2435dD87A",
+    "AxelarGasServiceProxy": "0xbA1978449EBD93F71f53b6798d9f6E127cb23527"
+  },
+  {
+    "name": "Highrise",
+    "chainId": 81842,
+    "gateway": "0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063",
+    "gasReceiver": "0xbA1978449EBD93F71f53b6798d9f6E127cb23527",
+    "constAddressDeployer": "0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a",
+    "rpc": "http://127.0.0.1:9656/ext/bc/2akpCM2RaBMdVCEcHYaFAKJBcSV7TPRcRTnWXxD5PZwkbSwBh5/rpc",
+    "tokenName": "Highrise World",
+    "tokenSymbol": "RISE",
+    "executableSample": "0x7076657514877F208Ae06e38d7e8ac0563D429bD"
+  }
+]

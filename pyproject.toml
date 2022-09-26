@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "bridge-contracts"
+version = "0.1.0"
+description = ""
+authors = ["Marko Culinovic <marko.culinovic@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.10"
+eth-brownie = "^1.19.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.6.0"
+flake8 = "^5.0.4"
+isort = "^5.10.1"
+pytest = "^6.2.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
