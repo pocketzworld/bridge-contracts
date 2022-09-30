@@ -1,10 +1,11 @@
 import os
-from typing import Any, NewType
+from typing import Any, NewType, Optional
 
 from brownie import accounts, config, network, project, web3
+from brownie.network.contract import ContractTx
 from eth_abi import encode
 from eth_account import Account
-from eth_utils import keccak
+from eth_utils import keccak, to_bytes
 
 Project = NewType("Project", Any)
 
@@ -14,6 +15,10 @@ SUBNET_ENVIRONMENTS = [
     "highrise-devnet",
     "highrise-tesnet",
 ]
+
+AXELAR_DEPLOYER = "this is a random string to get a random account. You need to provide the private key for a funded account here."
+
+CONST_ADDRESS_DEPLOYER = "const-address-deployer-deployer"
 
 
 def get_account() -> Account:
@@ -33,9 +38,6 @@ def load_axelar_utils() -> Project:
     return axelar
 
 
-AXELAR_DEPLOYER = "this is a random string to get a random account. You need to provide the private key for a funded account here."
-
-
 def axelar_deployer() -> Account:
     deployer_private_key = keccak(
         encode(
@@ -48,9 +50,6 @@ def axelar_deployer() -> Account:
     return account
 
 
-CONST_ADDRESS_DEPLOYER = "const-address-deployer-deployer"
-
-
 def const_address_deployer_deployer() -> Account:
     deployer_private_key = keccak(bytes(CONST_ADDRESS_DEPLOYER, "utf-8"))
     account = accounts.add(deployer_private_key)
@@ -61,3 +60,16 @@ def const_address_deployer_deployer() -> Account:
 def fund_account(account: str):
     funded_account = get_account()
     funded_account.transfer(account, web3.toWei(1, "ether")).wait(1)
+
+
+def encode_function_data(initializer: Optional[ContractTx] = None, *args) -> bytes:
+    """Encodes the function call so we can work with an initializer.
+    Args:
+        initializer - The initializer function we want to call
+        args - Arguments to pass to the initalizer function
+    Returns:
+        Encoded bytes
+    """
+    if not args or not initializer:
+        return to_bytes(hexstr="0x")
+    return initializer.encode_input(*args)

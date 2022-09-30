@@ -18,3 +18,6 @@ networks:
       unlock:
         - 0x9b10b6a50bf93e0eec102d7251107880f6192022
         - 0x6F2D0eB998F77595621DB2805872A894F0F1DEfB
+  highrise-local:
+    verify: False
+    constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'
