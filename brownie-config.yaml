@@ -18,6 +18,27 @@ networks:
       unlock:
         - 0x9b10b6a50bf93e0eec102d7251107880f6192022
         - 0x6F2D0eB998F77595621DB2805872A894F0F1DEfB
+    gateway: '0xDBa709A7bd670EA9E8020183A203b9a46AB03a3B'
+    constAddressDeployer: '0xa3E772D674D65FBAE5d17678C1c354fD4300Ed80'
+    gasService: '0xfCf7c237BBE2E9271A7C2Aba303FEAc64Cf45125'
+    tokenLinkerFactory: '0xDF19CE8B9a675A9331A475dC932Ce1941ae19008'
+    riseERC20: '0x9c7611b2975Ba265e07b25BAD1827e817e65B10C'
   highrise-local:
     verify: False
     constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'
+  local-dev1:
+    verify: False
+    gateway: '0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063'
+    constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'
+    gasService: '0xbA1978449EBD93F71f53b6798d9f6E127cb23527'
+    tokenLinkerFactory: '0x63CA20e9722dDfab175515f08Bb23b901B87433b'
+    cadDeployerAccount: '0x6F2D0eB998F77595621DB2805872A894F0F1DEfB'
+    infraDeployerAccount: '0xBa86A5719722B02a5D5e388999C25f3333c7A9fb'
+  local-dev2:
+    verify: False
+    gateway: '0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063'
+    constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'
+    gasService: '0xbA1978449EBD93F71f53b6798d9f6E127cb23527'
+    tokenLinkerFactory: '0x63CA20e9722dDfab175515f08Bb23b901B87433b'
+    cadDeployerAccount: '0x6F2D0eB998F77595621DB2805872A894F0F1DEfB'
+    infraDeployerAccount: '0xBa86A5719722B02a5D5e388999C25f3333c7A9fb'

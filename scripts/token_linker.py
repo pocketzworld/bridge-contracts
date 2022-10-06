@@ -2,6 +2,7 @@ from typing import Optional
 
 from brownie import (
     TokenLinkerFactory,
+    TokenLinkerFactoryLookupProxy,
     TokenLinkerFactoryProxy,
     TokenLinkerLockUnlockFactoryLookup,
     TokenLinkerLockUnlockUpgradable,
@@ -12,18 +13,21 @@ from brownie import (
     TokenLinkerNativeFactoryLookup,
     TokenLinkerNativeUpgradable,
     TokenLinkerSelfLookupProxy,
+    interface,
     network,
+    web3,
 )
-from brownie.network.contract import Contract, ContractContainer, ContractConstructor
+from brownie.network.contract import Contract, ContractContainer
+from eth_abi import encode
 from eth_account import Account
 from eth_hash.auto import keccak
-from eth_abi import encode
 
-from .common import get_account
-from .const_address_deployer import (
-    const_address_deployer,
-    deploy_and_init_contract,
-)
+from .common import Project, get_account, load_axelar_cgp, load_axelar_utils
+from .const_address_deployer import const_address_deployer, deploy_and_init_contract
+from .gas_receiver import gas_receiver
+from .gateway import gateway
+
+FACTORY_DEPLOYMENT_KEY = "factory"
 
 TOKEN_LINKERS_FM = {
     "LockUnlockFM": TokenLinkerLockUnlockFactoryLookup,
@@ -39,47 +43,86 @@ TOKEN_LINKERS_UPGRADEABLE = {
     "Native": TokenLinkerNativeUpgradable,
 }
 
+TOKEN_LINKERS_INFO = {
+    0: {
+        "name": "Lock/Unlock",
+        "factoryRef": "lockUnlock",
+    },
+    1: {
+        "name": "Mint/Burn",
+        "factoryRef": "mintBurn",
+    },
+    3: {
+        "name": "Native",
+        "factoryRef": "native",
+        "value": True,
+    },
+}
 
-def deploy_token_linker(contract: ContractContainer, account: Account) -> str:
+
+def deploy_token_linker(
+    contract: ContractContainer, account: Account, axelar_cgp: Optional[Project] = None
+) -> str:
     if not account:
         account = get_account()
+    if not axelar_cgp:
+        axelar_cgp = load_axelar_cgp()
     contract_name = contract._name
     print(f"Deploying {contract_name} for {network.show_active()}")
-    token_linker = contract.deploy(account.address, account.address, {"from": account})
+    gateway_address = gateway(axelar_cgp).address
+    gas_service_address = gas_receiver(axelar_cgp).address
+    token_linker = contract.deploy(
+        gateway_address, gas_service_address, {"from": account}
+    )
     print(f"{contract_name} deployed at: {token_linker.address}")
     return token_linker.address
 
 
-def deploy_fm() -> list[str]:
-    account = get_account()
+def deploy_fm(
+    account: Optional[Account] = None, axelar_cgp: Optional[Project] = None
+) -> list[str]:
+    if not account:
+        account = get_account()
+    if not axelar_cgp:
+        axelar_cgp = load_axelar_cgp()
     fm_linkers: list[str] = []
     for _, value in TOKEN_LINKERS_FM.items():
-        fm_linkers.append(deploy_token_linker(value, account))
+        fm_linkers.append(deploy_token_linker(value, account, axelar_cgp))
     return fm_linkers
 
 
-def deploy_upgradeable() -> list[str]:
-    account = get_account()
+def deploy_upgradeable(
+    account: Optional[Account] = None, axelar_cgp: Optional[Project] = None
+) -> list[str]:
+    if not account:
+        account = get_account()
+    if not axelar_cgp:
+        axelar_cgp = load_axelar_cgp()
     upgradeable: list[str] = []
     for _, value in TOKEN_LINKERS_UPGRADEABLE.items():
-        upgradeable.append(deploy_token_linker(value, account))
+        upgradeable.append(deploy_token_linker(value, account, axelar_cgp))
     return upgradeable
 
 
-def deploy_factory_implementation(account: Optional[Account] = None) -> str:
+def deploy_factory_implementation(
+    account: Optional[Account] = None, axelar_cgp: Optional[Project] = None
+) -> str:
     print(f"Deploying TokenLinkerFactory for {network.show_active()}")
     if not account:
         account = get_account()
     # Prepare codehash for proxies
-    fm_proxy_bytecode = bytes(TokenLinkerFactoryProxy.bytecode, "utf-8")
+    fm_proxy_bytecode = web3.toBytes(hexstr=TokenLinkerFactoryLookupProxy.bytecode)
     fm_proxy_codehash = keccak(fm_proxy_bytecode)
-    self_lookup_proxy_bytecode = bytes(TokenLinkerSelfLookupProxy.bytecode, "utf-8")
+    self_lookup_proxy_bytecode = web3.toBytes(
+        hexstr=TokenLinkerSelfLookupProxy.bytecode
+    )
     upgradeable_proxy_codehash = keccak(self_lookup_proxy_bytecode)
 
-    # TODO(@mculinovic)
     # Fetch gateway and gas service addresses
-    gateway_address = account.address
-    gas_service_address = account.address
+    if not axelar_cgp:
+        axelar_cgp = load_axelar_cgp()
+    gateway_address = gateway(axelar_cgp).address
+    gas_service_address = gas_receiver(axelar_cgp).address
 
     # Deploy factory implementation
     factory = TokenLinkerFactory.deploy(
@@ -113,7 +156,11 @@ def deploy_factory_proxy(
         ),
     ]
     proxy_address = deploy_and_init_contract(
-        TokenLinkerFactoryProxy, account, const_address_deployer, *init_params
+        TokenLinkerFactoryProxy,
+        account,
+        const_address_deployer,
+        FACTORY_DEPLOYMENT_KEY,
+        *init_params,
     )
     print(f"TokenLinkerFactoryProxy deployed at: {proxy_address}")
     return proxy_address
@@ -121,10 +168,42 @@ def deploy_factory_proxy(
 
 def deploy():
     account = get_account()
-    fms = deploy_fm()
-    upgradeable = deploy_upgradeable()
-    cad_contract = const_address_deployer(account)
-    factory_impl_address = deploy_factory_implementation(account)
+    axelar_cgp = load_axelar_cgp()
+    axelar_utils = load_axelar_utils()
+    fms = deploy_fm(account, axelar_cgp)
+    upgradeable = deploy_upgradeable(account, axelar_cgp)
+    cad_contract = const_address_deployer(axelar_utils)
+    factory_impl_address = deploy_factory_implementation(account, axelar_cgp)
     factory_proxy_address = deploy_factory_proxy(
         cad_contract, factory_impl_address, upgradeable, fms, account=account
     )
+    print("SUMMARY")
+    print("----------------------------------------------------")
+    print(f"-> Factory Proxy: {factory_proxy_address}")
+    print("----------------------------------------------------")
+
+
+def deploy_token_linker_proxies(
+    factory_address: str, account: Optional[Account] = None
+):
+    if not account:
+        account = get_account()
+    factory = interface.ITokenLinkerFactory(factory_address)
+    for factory_managed in [True, False]:
+        for _type, _ in TOKEN_LINKERS_INFO.items():
+            if _type != 3:
+                continue
+            salt = keccak(encode(["string"], [str(_type)]))
+            # TODO(@mculinovic)
+            # factory.deploy(
+            #     _type,
+            #     salt,
+            #     token_linker_params(_type, **token_linker_kwargs(_type)),
+            #     factory_managed,
+            #     {"from": account},
+            # )
+            id = factory.getTokenLinkerId(account.address, salt)
+            address = factory.tokenLinker(id, True)
+            print(address)
+
+    print(factory.numberDeployed())

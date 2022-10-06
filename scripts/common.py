@@ -10,22 +10,27 @@ from eth_utils import keccak, to_bytes
 Project = NewType("Project", Any)
 
 LOCAL_BLOCKCHAIN_ENVIRONMENTS = ["development", "ganache-local"]
+LOCAL_DEV_SUBNETS = ["local-dev1", "local-dev2"]
 SUBNET_ENVIRONMENTS = [
     "highrise-local",
     "highrise-devnet",
-    "highrise-tesnet",
 ]
+HIGHRISE_TESTNET = "highrise-testnet"
 
 AXELAR_DEPLOYER = "this is a random string to get a random account. You need to provide the private key for a funded account here."
-
 CONST_ADDRESS_DEPLOYER = "const-address-deployer-deployer"
 
 
 def get_account() -> Account:
-    if network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
+    active_network = network.show_active()
+    if active_network in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
         return accounts[0]
-    else:
+    elif active_network in LOCAL_DEV_SUBNETS:
         return accounts.load(os.getenv("DEV_ACCOUNT_NAME"))
+    elif active_network == HIGHRISE_TESTNET:
+        return accounts.load(os.getenv("TESTNET_ACCOUNT_NAME"))
+    else:
+        raise Exception("Unsupported network")
 
 
 def load_axelar_cgp() -> Project:
@@ -39,20 +44,32 @@ def load_axelar_utils() -> Project:
 
 
 def axelar_deployer() -> Account:
-    deployer_private_key = keccak(
-        encode(
-            ["string"],
-            [AXELAR_DEPLOYER],
+    active_network = network.show_active()
+    if active_network in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
+        return accounts[0]
+    elif active_network == HIGHRISE_TESTNET:
+        raise Exception("Forbidden on testnet")
+    else:
+        deployer_private_key = keccak(
+            encode(
+                ["string"],
+                [AXELAR_DEPLOYER],
+            )
         )
-    )
-    account = accounts.add(deployer_private_key)
+        account = accounts.add(deployer_private_key)
     print(f"Deployer: {account.address} {account.balance()}")
     return account
 
 
 def const_address_deployer_deployer() -> Account:
-    deployer_private_key = keccak(bytes(CONST_ADDRESS_DEPLOYER, "utf-8"))
-    account = accounts.add(deployer_private_key)
+    active_network = network.show_active()
+    if active_network in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
+        account = get_account()
+    elif active_network == HIGHRISE_TESTNET:
+        raise Exception("Forbidden on testnet")
+    else:
+        deployer_private_key = keccak(bytes(CONST_ADDRESS_DEPLOYER, "utf-8"))
+        account = accounts.add(deployer_private_key)
     print(f"Deployer: {account.address} {account.balance()}")
     return account
 

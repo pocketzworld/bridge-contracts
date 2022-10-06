@@ -1,12 +1,17 @@
-from brownie import network
+from typing import Optional
+
+from brownie import config, network
+from brownie.network.contract import Contract
 from eth_abi import encode
+from .common import Project
 
 from .common import axelar_deployer, load_axelar_cgp
 
 
-def deploy():
-    print(f"Deploying ConstAddressDeployer for {network.show_active()}")
-    axelar = load_axelar_cgp()
+def deploy(axelar: Optional[Project] = None) -> Contract:
+    print(f"Deploying Axelar Gateway contracts for {network.show_active()}")
+    if not axelar:
+        axelar = load_axelar_cgp()
     account = axelar_deployer()
     auth = axelar.AxelarAuthWeighted.deploy(
         [encode(["address[]", "uint256[]", "uint256"], [[account.address], [1], 1])],
@@ -26,3 +31,14 @@ def deploy():
     print("Transfered auth ownership to proxy")
     # Gateway should be accessed through proxy address
     # Interface is IAxelarGateway
+    return Contract.from_abi("AxelarGateway", proxy.address, axelar.AxelarGateway.abi)
+
+
+def gateway(axelar: Optional[Project] = None) -> Contract:
+    if not axelar:
+        axelar = load_axelar_cgp()
+    if address := config["networks"][network.show_active()].get("gateway"):
+        print(f"Gateway at: {address}")
+        return Contract.from_abi("AxelarGateway", address, axelar.AxelarGateway.abi)
+    else:
+        return deploy(axelar)
