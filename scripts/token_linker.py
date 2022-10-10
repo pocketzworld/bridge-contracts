@@ -13,7 +13,6 @@ from brownie import (
     TokenLinkerNativeFactoryLookup,
     TokenLinkerNativeUpgradable,
     TokenLinkerSelfLookupProxy,
-    interface,
     network,
     web3,
 )
@@ -181,29 +180,3 @@ def deploy():
     print("----------------------------------------------------")
     print(f"-> Factory Proxy: {factory_proxy_address}")
     print("----------------------------------------------------")
-
-
-def deploy_token_linker_proxies(
-    factory_address: str, account: Optional[Account] = None
-):
-    if not account:
-        account = get_account()
-    factory = interface.ITokenLinkerFactory(factory_address)
-    for factory_managed in [True, False]:
-        for _type, _ in TOKEN_LINKERS_INFO.items():
-            if _type != 3:
-                continue
-            salt = keccak(encode(["string"], [str(_type)]))
-            # TODO(@mculinovic)
-            # factory.deploy(
-            #     _type,
-            #     salt,
-            #     token_linker_params(_type, **token_linker_kwargs(_type)),
-            #     factory_managed,
-            #     {"from": account},
-            # )
-            id = factory.getTokenLinkerId(account.address, salt)
-            address = factory.tokenLinker(id, True)
-            print(address)
-
-    print(factory.numberDeployed())

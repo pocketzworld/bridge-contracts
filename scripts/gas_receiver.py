@@ -3,7 +3,7 @@ from typing import Optional
 from brownie import config, network
 from brownie.network.contract import Contract
 
-from .common import Project, axelar_deployer, get_account, load_axelar_cgp
+from .common import Project, axelar_deployer, load_axelar_cgp
 
 BLACKHOLE_ADDRESS = "0x0100000000000000000000000000000000000000"
 

@@ -1,22 +1,15 @@
 from typing import Optional
 
-from brownie import (
-    Contract,
-    TokenLinkerNativeFactoryLookup,
-    config,
-    interface,
-    network,
-    web3,
-)
+from brownie import config, interface, network
 from eth_abi import encode
 from eth_account import Account
 from eth_hash.auto import keccak
 
 from .common import get_account
 
-# TODO(@mculinovic)
 RISE_SALT = "RISE"
-RISE_ERC20_ADDRESS = config["networks"][network.show_active()]["riseERC20"]
+AVAX_SALT = "AVAX"
+USDC_SALT = "USDC"
 
 
 def token_linker_params(_type: int, **kwargs) -> bytes:
@@ -33,7 +26,34 @@ def token_linker_params(_type: int, **kwargs) -> bytes:
         raise Exception(f"Unsupported token linker type: {_type}")
 
 
-def deploy_native_rise(account: Optional[Account] = None):
+def deploy_with_factory(
+    account: Account, token_linker_type: int, salt: str, **kwargs
+) -> str:
+    factory_address = config["networks"][network.show_active()].get(
+        "tokenLinkerFactory"
+    )
+    factory = interface.ITokenLinkerFactory(factory_address)
+    salt = keccak(encode(["string"], [salt]))
+    factory.deploy(
+        token_linker_type,
+        salt,
+        token_linker_params(
+            token_linker_type,
+            **kwargs,
+        ),
+        True,
+        {"from": account},
+    ).wait(1)
+    id = factory.getTokenLinkerId(account.address, salt)
+    address = factory.tokenLinker(id, True)
+    return address
+
+
+def deploy_native(asset_type: str, account: Optional[Account] = None):
+    if asset_type == "AVAX":
+        salt = AVAX_SALT
+    elif asset_type == "RISE":
+        salt = RISE_SALT
     print(f"Deploying TokenLinkerNative to {network.show_active()}")
     if not account:
         account = get_account()
@@ -42,107 +62,53 @@ def deploy_native_rise(account: Optional[Account] = None):
     )
     if not factory_address:
         raise Exception("Factory not deployed")
-    factory = interface.ITokenLinkerFactory(factory_address)
-    salt = keccak(encode(["string"], [RISE_SALT]))
     token_linker_type = 3
-    (
-        tx := factory.deploy(
-            token_linker_type,
-            salt,
-            token_linker_params(token_linker_type),
-            True,
-            {"from": account},
-        )
-    ).wait(1)
-    print(tx.events)
-    id = factory.getTokenLinkerId(account.address, salt)
-    address = factory.tokenLinker(id, True)
+    address = deploy_with_factory(account, token_linker_type, salt)
     print(f"Deployed TokenLinkerNative at {address}")
 
 
-def deploy_rise_lock_unlock(account: Optional[Account] = None):
+def deploy_lock_unlock(asset: str, account: Optional[Account] = None):
+    if asset == "RISE":
+        asset_address = config["networks"][network.show_active()]["riseERC20"]
+        salt = RISE_SALT
+    elif asset == "USDC":
+        asset_address = config["networks"][network.show_active()]["usdcERC20"]
+        salt = USDC_SALT
+    else:
+        raise Exception("Not supported asset")
     print(f"Deploying TokenLinkerLockUnlock to {network.show_active()}")
     if not account:
         account = get_account()
-    factory_address = config["networks"][network.show_active()].get(
-        "tokenLinkerFactory"
-    )
-    factory = interface.ITokenLinkerFactory(factory_address)
-    salt = keccak(encode(["string"], [RISE_SALT]))
     token_linker_type = 0
-    factory.deploy(
-        token_linker_type,
-        salt,
-        token_linker_params(token_linker_type, address=RISE_ERC20_ADDRESS),
-        True,
-        {"from": account},
-    ).wait(1)
-    id = factory.getTokenLinkerId(account.address, salt)
-    address = factory.tokenLinker(id, True)
+    address = deploy_with_factory(
+        account, token_linker_type, salt, address=asset_address
+    )
     print(f"Deployed TokenLinkerLockUnlock at {address}")
 
 
-def get_native_balance():
-    account = get_account()
-    factory_address = config["networks"][network.show_active()].get(
-        "tokenLinkerFactory"
+def deploy_mint_burn(asset: str, account: Optional[Account] = None):
+    if asset == "AVAX":
+        asset_name = "Avalanche Token"
+        asset_symbol = "AVAX"
+        asset_decimals = 18
+        salt = AVAX_SALT
+    elif asset == "USDC":
+        asset_name = "USD Coin"
+        asset_symbol = "USDC"
+        asset_decimals = 6
+        salt = USDC_SALT
+    else:
+        raise Exception("Not supported asset")
+    print(f"Deploying TokenLinkerMintBurn to {network.show_active()}")
+    if not account:
+        account = get_account()
+    token_linker_type = 1
+    address = deploy_with_factory(
+        account,
+        token_linker_type,
+        salt,
+        name=asset_name,
+        symbol=asset_symbol,
+        decimals=asset_decimals,
     )
-    factory = interface.ITokenLinkerFactory(factory_address)
-    salt = keccak(encode(["string"], [RISE_SALT]))
-    id = factory.getTokenLinkerId(account.address, salt)
-    address = factory.tokenLinker(id, True)
-    print(address)
-    token_linker = Contract.from_abi(
-        "Native", address, TokenLinkerNativeFactoryLookup.abi
-    )
-    print(token_linker.getNativeBalance())
-    balance = token_linker.getNativeBalance()
-    print(web3.fromWei(balance, "ether"))
-
-
-def update_native_balance(amount: int):
-    account = get_account()
-    factory_address = config["networks"][network.show_active()].get(
-        "tokenLinkerFactory"
-    )
-    factory = interface.ITokenLinkerFactory(factory_address)
-    salt = keccak(encode(["string"], [RISE_SALT]))
-    id = factory.getTokenLinkerId(account.address, salt)
-    address = factory.tokenLinker(id, True)
-    print(address)
-    token_linker = Contract.from_abi(
-        "Native", address, TokenLinkerNativeFactoryLookup.abi
-    )
-    print(token_linker.getNativeBalance())
-    token_linker.updateBalance({"from": account, "value": web3.toWei(amount, "ether")})
-    balance = token_linker.getNativeBalance()
-    print(web3.fromWei(balance, "ether"))
-
-
-def send_erc20(amount: int):
-    amount = web3.toWei(amount, "ether")
-    account = get_account()
-    factory_address = config["networks"][network.show_active()].get(
-        "tokenLinkerFactory"
-    )
-    factory = interface.ITokenLinkerFactory(factory_address)
-    salt = keccak(encode(["string"], [RISE_SALT]))
-    id = factory.getTokenLinkerId(account.address, salt)
-    address = factory.tokenLinker(id, True)
-    print(address)
-    token_linker = interface.ITokenLinker(address)
-    token_address = token_linker.token()
-    print(token_address)
-    token = interface.IERC20(token_address)
-    token.approve(token_linker.address, amount, {"from": account}).wait(1)
-    chain_name = "Dev"
-    token_linker.sendToken(
-        chain_name,
-        account.address,
-        amount,
-        {
-            "from": account,
-            "value": 30000000,
-            "gas_limit": 10000000,
-        },
-    )
+    print(f"Deployed TokenLinkerMintBurn at {address}")
