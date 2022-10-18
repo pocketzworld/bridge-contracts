@@ -58,8 +58,9 @@ def deploy_and_init_contract(
     print(
         f"ConstAddressDeployer with salt {salt} deploying and initializing {contract_name} for {network.show_active()}"
     )
-
-    bytecode = factory.constructor().build_transaction()["data"]
+    bytecode = factory.constructor().build_transaction({"from": account.address})[
+        "data"
+    ]
     # Precalculate contract address
     proxy_address = deployer.deployedAddress(bytecode, account.address, salt)
     # Build init transaction

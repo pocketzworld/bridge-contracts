@@ -31,10 +31,10 @@ networks:
     gateway: '0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063'
     constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'
     gasService: '0xbA1978449EBD93F71f53b6798d9f6E127cb23527'
-    tokenLinkerFactory: '0x450b1d633198572ed27859bdf4AFD1AA08Be1e08'
+    tokenLinkerFactory: ''
     cadDeployerAccount: '0x6F2D0eB998F77595621DB2805872A894F0F1DEfB'
     infraDeployerAccount: '0xBa86A5719722B02a5D5e388999C25f3333c7A9fb'
-    riseERC20: '0x5E0E7E87D2C1c85a1146bbB8DD6248777E9a966c'
+    riseERC20: ''
   local-dev2:
     verify: False
     gateway: '0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063'
@@ -44,3 +44,27 @@ networks:
     cadDeployerAccount: '0x6F2D0eB998F77595621DB2805872A894F0F1DEfB'
     infraDeployerAccount: '0xBa86A5719722B02a5D5e388999C25f3333c7A9fb'
     riseERC20: ''
+  dev-c-chain:
+    verify: False
+    gateway: '0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063'
+    constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'
+    gasService: '0xbA1978449EBD93F71f53b6798d9f6E127cb23527'
+    tokenLinkerFactory: '0x450b1d633198572ed27859bdf4AFD1AA08Be1e08'
+    cadDeployerAccount: '0x6F2D0eB998F77595621DB2805872A894F0F1DEfB'
+    infraDeployerAccount: '0xBa86A5719722B02a5D5e388999C25f3333c7A9fb'
+    riseERC20: '0x6365ed1482d3a02cE4F4AF8890bA2Cb9e4D09F0E'
+    usdcERC20: '0x49c76872a97073A5741495b5c93eEd3630D25aED'
+    usdcTokenLinker: '0xA41DB9eE137c5602e1A824B425efeD54b8a0DF5d'
+    riseTokenLinker: '0x20e94a2Bf458ce5EF89e3bFeebEE302B08D77bF0'
+    nativeTokenLinker: '0x4Dee37E541804574a222Ba14681D4EE912333449'
+  dev-highrise:
+    verify: False
+    gateway: '0xF8f92930AD2C4d627a96819E67aD3BcD95b5E063'
+    constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'
+    gasService: '0xbA1978449EBD93F71f53b6798d9f6E127cb23527'
+    tokenLinkerFactory: '0x450b1d633198572ed27859bdf4AFD1AA08Be1e08'
+    cadDeployerAccount: '0x6F2D0eB998F77595621DB2805872A894F0F1DEfB'
+    infraDeployerAccount: '0xBa86A5719722B02a5D5e388999C25f3333c7A9fb'
+    usdcTokenLinker: '0xA41DB9eE137c5602e1A824B425efeD54b8a0DF5d'
+    nativeTokenLinker: '0x20e94a2Bf458ce5EF89e3bFeebEE302B08D77bF0'
+    avaxTokenLinker: '0x4Dee37E541804574a222Ba14681D4EE912333449'

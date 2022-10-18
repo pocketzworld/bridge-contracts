@@ -10,7 +10,7 @@ from eth_utils import keccak, to_bytes
 Project = NewType("Project", Any)
 
 LOCAL_BLOCKCHAIN_ENVIRONMENTS = ["development", "ganache-local"]
-LOCAL_DEV_SUBNETS = ["local-dev1", "local-dev2"]
+DEV_SUBNETS = ["local-dev1", "local-dev2", "dev-c-chain", "dev-highrise"]
 SUBNET_ENVIRONMENTS = [
     "highrise-local",
     "highrise-devnet",
@@ -25,7 +25,7 @@ def get_account() -> Account:
     active_network = network.show_active()
     if active_network in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
         return accounts[0]
-    elif active_network in LOCAL_DEV_SUBNETS:
+    elif active_network in DEV_SUBNETS:
         return accounts.load(os.getenv("DEV_ACCOUNT_NAME"))
     elif active_network == HIGHRISE_TESTNET:
         return accounts.load(os.getenv("TESTNET_ACCOUNT_NAME"))
