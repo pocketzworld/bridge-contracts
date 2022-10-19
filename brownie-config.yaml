@@ -3,6 +3,7 @@ dependencies:
   - axelarnetwork/axelar-cgp-solidity@4.4.0
   - axelarnetwork/axelar-utils-solidity@1.3.0
   - OpenZeppelin/openzeppelin-contracts@4.7.2
+  - axelarnetwork/token-linker@1.0.0
 compiler:
   solc:
     version: '0.8.9'
@@ -10,6 +11,7 @@ compiler:
       - '@axelarcgp=axelarnetwork/axelar-cgp-solidity@4.4.0'
       - '@axelarutils=axelarnetwork/axelar-utils-solidity@1.3.0'
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.7.2'
+      - '@tokenlinker=axelarnetwork/token-linker@1.0.0'
 networks:
   development:
     verify: False
@@ -18,11 +20,12 @@ networks:
       unlock:
         - 0x9b10b6a50bf93e0eec102d7251107880f6192022
         - 0x6F2D0eB998F77595621DB2805872A894F0F1DEfB
-    gateway: '0xDBa709A7bd670EA9E8020183A203b9a46AB03a3B'
-    constAddressDeployer: '0xa3E772D674D65FBAE5d17678C1c354fD4300Ed80'
-    gasService: '0xfCf7c237BBE2E9271A7C2Aba303FEAc64Cf45125'
-    tokenLinkerFactory: '0xDF19CE8B9a675A9331A475dC932Ce1941ae19008'
-    riseERC20: '0x9c7611b2975Ba265e07b25BAD1827e817e65B10C'
+    gateway: '0x182edb3A1E1529411d6bC850e43dD9BB41f7ee0A'
+    constAddressDeployer: '0xEA14013463CF2CcFd1a52b205e0bD89B885c66Da'
+    gasService: '0x366D75c0f3Bd302f70315CC48cbf0b09a2247EaF'
+    tokenLinkerFactory: '0x345D06e160Fc1f64b0e7d53c96777F8961D56F4D'
+    riseERC20: '0x06136f4edFfb66b34a744717e6515bD2409D02Bc'
+    usdcERC20: '0xbaB93656CE750a18EA33F40cfd6abF701325CA27'
   highrise-local:
     verify: False
     constAddressDeployer: '0x69aeB7Dc4f2A86873Dae8D753DE89326Cf90a77a'

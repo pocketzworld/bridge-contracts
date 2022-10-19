@@ -1,45 +1,38 @@
 from typing import Optional
 
-from brownie import (
-    TokenLinkerFactory,
-    TokenLinkerFactoryLookupProxy,
-    TokenLinkerFactoryProxy,
-    TokenLinkerLockUnlockFactoryLookup,
-    TokenLinkerLockUnlockUpgradable,
-    TokenLinkerMintBurnExternalFactoryLookup,
-    TokenLinkerMintBurnExternalUpgradable,
-    TokenLinkerMintBurnFactoryLookup,
-    TokenLinkerMintBurnUpgradable,
-    TokenLinkerNativeFactoryLookup,
-    TokenLinkerNativeUpgradable,
-    TokenLinkerSelfLookupProxy,
-    network,
-    web3,
-)
+from brownie import network, web3
 from brownie.network.contract import Contract, ContractContainer
 from eth_abi import encode
 from eth_account import Account
 from eth_hash.auto import keccak
 
-from .common import Project, get_account, load_axelar_cgp, load_axelar_utils
+from .common import (
+    Project,
+    get_account,
+    load_axelar_cgp,
+    load_axelar_token_linker,
+    load_axelar_utils,
+)
 from .const_address_deployer import const_address_deployer, deploy_and_init_contract
 from .gas_receiver import gas_receiver
 from .gateway import gateway
 
 FACTORY_DEPLOYMENT_KEY = "factory"
 
+token_linker_project = load_axelar_token_linker()
+
 TOKEN_LINKERS_FM = {
-    "LockUnlockFM": TokenLinkerLockUnlockFactoryLookup,
-    "MintBurnFM": TokenLinkerMintBurnFactoryLookup,
-    "MintBurnExternalFM": TokenLinkerMintBurnExternalFactoryLookup,
-    "NativeFM": TokenLinkerNativeFactoryLookup,
+    "LockUnlockFM": token_linker_project.TokenLinkerLockUnlockFactoryLookup,
+    "MintBurnFM": token_linker_project.TokenLinkerMintBurnFactoryLookup,
+    "MintBurnExternalFM": token_linker_project.TokenLinkerMintBurnExternalFactoryLookup,
+    "NativeFM": token_linker_project.TokenLinkerNativeFactoryLookup,
 }
 
 TOKEN_LINKERS_UPGRADEABLE = {
-    "LockUnlock": TokenLinkerLockUnlockUpgradable,
-    "MintBurn": TokenLinkerMintBurnUpgradable,
-    "MintBurnExternal": TokenLinkerMintBurnExternalUpgradable,
-    "Native": TokenLinkerNativeUpgradable,
+    "LockUnlock": token_linker_project.TokenLinkerLockUnlockUpgradable,
+    "MintBurn": token_linker_project.TokenLinkerMintBurnUpgradable,
+    "MintBurnExternal": token_linker_project.TokenLinkerMintBurnExternalUpgradable,
+    "Native": token_linker_project.TokenLinkerNativeUpgradable,
 }
 
 TOKEN_LINKERS_INFO = {
@@ -110,10 +103,12 @@ def deploy_factory_implementation(
     if not account:
         account = get_account()
     # Prepare codehash for proxies
-    fm_proxy_bytecode = web3.toBytes(hexstr=TokenLinkerFactoryLookupProxy.bytecode)
+    fm_proxy_bytecode = web3.toBytes(
+        hexstr=token_linker_project.TokenLinkerFactoryLookupProxy.bytecode
+    )
     fm_proxy_codehash = keccak(fm_proxy_bytecode)
     self_lookup_proxy_bytecode = web3.toBytes(
-        hexstr=TokenLinkerSelfLookupProxy.bytecode
+        hexstr=token_linker_project.TokenLinkerSelfLookupProxy.bytecode
     )
     upgradeable_proxy_codehash = keccak(self_lookup_proxy_bytecode)
 
@@ -124,7 +119,7 @@ def deploy_factory_implementation(
     gas_service_address = gas_receiver(axelar_cgp).address
 
     # Deploy factory implementation
-    factory = TokenLinkerFactory.deploy(
+    factory = token_linker_project.TokenLinkerFactory.deploy(
         fm_proxy_codehash,
         upgradeable_proxy_codehash,
         gateway_address,
@@ -155,7 +150,7 @@ def deploy_factory_proxy(
         ),
     ]
     proxy_address = deploy_and_init_contract(
-        TokenLinkerFactoryProxy,
+        token_linker_project.TokenLinkerFactoryProxy,
         account,
         const_address_deployer,
         FACTORY_DEPLOYMENT_KEY,
