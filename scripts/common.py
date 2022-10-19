@@ -43,6 +43,11 @@ def load_axelar_utils() -> Project:
     return axelar
 
 
+def load_axelar_token_linker() -> Project:
+    token_linker = project.load(config["dependencies"][3])
+    return token_linker
+
+
 def axelar_deployer() -> Account:
     active_network = network.show_active()
     if active_network in LOCAL_BLOCKCHAIN_ENVIRONMENTS:

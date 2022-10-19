@@ -1,19 +1,18 @@
-from brownie import (
-    Contract,
-    TokenLinkerNativeFactoryLookup,
-    config,
-    interface,
-    network,
-    web3,
-)
+from typing import Optional
+
+from brownie import Contract, config, interface, network, web3
 from eth_abi import encode
 from eth_hash.auto import keccak
 
-from .common import get_account
+from .common import Project, get_account, load_axelar_token_linker
 from .token_linker_assets import AVAX_SALT, RISE_SALT, USDC_SALT
 
 
-def get_token_linker_native(account_address: str, salt: str) -> Contract:
+def get_token_linker_native(
+    account_address: str, salt: str, token_linker_project: Optional[Project] = None
+) -> Contract:
+    if not token_linker_project:
+        token_linker_project = load_axelar_token_linker()
     factory_address = config["networks"][network.show_active()].get(
         "tokenLinkerFactory"
     )
@@ -23,7 +22,7 @@ def get_token_linker_native(account_address: str, salt: str) -> Contract:
     address = factory.tokenLinker(id, True)
     print(address)
     token_linker = Contract.from_abi(
-        "Native", address, TokenLinkerNativeFactoryLookup.abi
+        "Native", address, token_linker_project.TokenLinkerNativeFactoryLookup.abi
     )
     return token_linker
 
