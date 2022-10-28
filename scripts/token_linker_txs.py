@@ -1,22 +1,19 @@
-from typing import Optional
-
-from brownie import Contract, config, interface, network, web3
+from brownie import Contract, config, network, web3
 from eth_abi import encode
 from eth_hash.auto import keccak
 
-from .common import Project, get_account, load_axelar_token_linker
+from .common import get_account, load_axelar_token_linker, load_axelar_utils
 from .token_linker_assets import AVAX_SALT, RISE_SALT, USDC_SALT
 
+token_linker_project = load_axelar_token_linker()
+axelar = load_axelar_utils()
 
-def get_token_linker_native(
-    account_address: str, salt: str, token_linker_project: Optional[Project] = None
-) -> Contract:
-    if not token_linker_project:
-        token_linker_project = load_axelar_token_linker()
+
+def get_token_linker_native(account_address: str, salt: str) -> Contract:
     factory_address = config["networks"][network.show_active()].get(
         "tokenLinkerFactory"
     )
-    factory = interface.ITokenLinkerFactory(factory_address)
+    factory = token_linker_project.interface.ITokenLinkerFactory(factory_address)
     salt = keccak(encode(["string"], [salt]))
     id = factory.getTokenLinkerId(account_address, salt)
     address = factory.tokenLinker(id, True)
@@ -60,15 +57,17 @@ def update_native_balance(asset_type: str, amount: int):
     print(f"Balance after {web3.fromWei(balance, 'ether')}")
 
 
-def get_token_linker(account_address: str, salt: str) -> interface.ITokenLinker:
+def get_token_linker(
+    account_address: str, salt: str
+) -> token_linker_project.interface.ITokenLinker:
     factory_address = config["networks"][network.show_active()].get(
         "tokenLinkerFactory"
     )
-    factory = interface.ITokenLinkerFactory(factory_address)
+    factory = token_linker_project.interface.ITokenLinkerFactory(factory_address)
     salt = keccak(encode(["string"], [salt]))
     id = factory.getTokenLinkerId(account_address, salt)
     address = factory.tokenLinker(id, True)
-    token_linker = interface.ITokenLinker(address)
+    token_linker = token_linker_project.interface.ITokenLinker(address)
     print(f"Token linker at: {address}")
     return token_linker
 
@@ -79,7 +78,7 @@ def approve_token(asset_type: str, amount: int):
     account = get_account()
     token_linker = get_token_linker(account.address, salt)
     token_address = token_linker.token()
-    token = interface.IERC20(token_address)
+    token = axelar.interface.IERC20(token_address)
     token.approve(token_linker.address, amount, {"from": account}).wait(1)
 
 

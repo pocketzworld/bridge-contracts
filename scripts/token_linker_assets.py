@@ -1,11 +1,11 @@
 from typing import Optional
 
-from brownie import config, interface, network
+from brownie import config, network
 from eth_abi import encode
 from eth_account import Account
 from eth_hash.auto import keccak
 
-from .common import get_account
+from .common import get_account, load_axelar_token_linker
 
 RISE_SALT = "RISE"
 AVAX_SALT = "AVAX"
@@ -32,7 +32,8 @@ def deploy_with_factory(
     factory_address = config["networks"][network.show_active()].get(
         "tokenLinkerFactory"
     )
-    factory = interface.ITokenLinkerFactory(factory_address)
+    token_linker_project = load_axelar_token_linker()
+    factory = token_linker_project.interface.ITokenLinkerFactory(factory_address)
     salt = keccak(encode(["string"], [salt]))
     factory.deploy(
         token_linker_type,
