@@ -41,7 +41,7 @@ def deploy_with_factory(
             token_linker_type,
             **kwargs,
         ),
-        True,
+        True,  # Factory managed
         {"from": account},
     ).wait(1)
     id = factory.getTokenLinkerId(account.address, salt)
